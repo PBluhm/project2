@@ -4,16 +4,19 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -33,7 +36,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-
+                    MyMainApp()
                 }
             }
         }
@@ -56,10 +59,14 @@ fun MyMainApp() {
                     text = "All My Todos",
                     modifier = Modifier
                         .padding(10.dp),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    color = Color.White,
+
                 )
             }
         }
+        MyTabs(pagerState = pagerState)
+        MyDifferentDays(pagerState = pagerState)
     }
 }
 
@@ -68,9 +75,9 @@ fun MyMainApp() {
 fun MyTabs(pagerState: PagerState) {
 
     val tabList = listOf(
-        "Today" to Text("TODAY"),
-        "Tomorrow" to Text("TOMORROW"),
-        "This Week" to Text("THIS WEEK"),
+        "Today" to Icons.Default.List,
+        "Tomorrow" to Icons.Default.Face,
+        "This Week" to Icons.Default.Person,
     )
 
     val scope = rememberCoroutineScope()
@@ -92,6 +99,9 @@ fun MyTabs(pagerState: PagerState) {
         tabList.forEachIndexed { index, _ ->
 
             Tab(
+                icon = {
+                    Icon(imageVector = tabList[index].second, contentDescription = null)
+                },
 
                 text = {
                     Text(
@@ -120,21 +130,51 @@ fun MyTabs(pagerState: PagerState) {
 fun MyDifferentDays(pagerState: PagerState) {
     HorizontalPager(state = pagerState) { page ->
         when (page) {
-            0 -> MyDifferentDaysContent(data = "Test")
-            1 -> MyDifferentDaysContent(data = "Test2")
-            2 -> MyDifferentDaysContent(data = "Test3")
+            0 -> MyDifferentDaysContent(day = "Today")
+            1 -> MyDifferentDaysContent(day = "Tomorrow")
+            2 -> MyDifferentDaysContent(day = "This Week")
         }
     }
 }
 
 @Composable
-fun MyDifferentDaysContent(data: String) {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
+fun MyDifferentDaysContent(day: String) {
 
+    val myTextBox = remember {
+        mutableStateOf(TextFieldValue())
+    }
+
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(10.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(5.dp),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            TextField(
+                value = myTextBox.value,
+                onValueChange = {myTextBox.value = it},
+            )
+
+            Spacer(Modifier.width(10.dp))
+
+            Button(
+                onClick = {},
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = greenColor,
+                    contentColor = Color.White)
+            ) {
+                Text(
+                    text = "ADD",
+                )
+            }
+
+        }
     }
 }
 
