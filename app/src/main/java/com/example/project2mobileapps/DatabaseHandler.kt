@@ -20,7 +20,7 @@ class DBHandler
         db.execSQL(query)
     }
 
-    fun addNewUser(
+    fun addNewTodo(
         item: String?,
         day: String?
     ) {
@@ -50,7 +50,8 @@ class DBHandler
 
     fun readItem(day: String?): ArrayList<UserModel> {
         val db = this.readableDatabase
-        val cursorPeople: Cursor = db.rawQuery("SELECT * FROM $TABLE_NAME", null)
+        val selectedValues = arrayOf(day)
+        val cursorPeople: Cursor = db.rawQuery("SELECT * FROM $TABLE_NAME WHERE $DAY_COL = ?", selectedValues)
         val userModel: ArrayList<UserModel> = ArrayList()
 
         if (cursorPeople.moveToFirst()) {
@@ -68,10 +69,10 @@ class DBHandler
         return userModel
     }
 
-    fun removeItem(user: String) {
+    fun removeItem(todo: String) {
         val db = this.writableDatabase
 
-        db.delete(TABLE_NAME, "name=?", arrayOf(user))
+        db.delete(TABLE_NAME, "$ITEM_COL=?", arrayOf(todo))
         db.close()
     }
 

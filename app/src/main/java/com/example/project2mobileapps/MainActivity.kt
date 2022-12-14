@@ -1,25 +1,31 @@
 package com.example.project2mobileapps
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.project2mobileapps.ui.theme.Project2MobileAppsTheme
 import com.example.project2mobileapps.ui.theme.greenColor
 import com.google.accompanist.pager.*
@@ -36,7 +42,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    MyMainApp()
+                    MyMainApp(LocalContext.current)
                 }
             }
         }
@@ -45,7 +51,7 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
-fun MyMainApp() {
+fun MyMainApp(context: Context) {
     val pagerState = rememberPagerState(pageCount = 3)
 
     Column(modifier = Modifier.background(Color.White)) {
@@ -62,11 +68,11 @@ fun MyMainApp() {
                     textAlign = TextAlign.Center,
                     color = Color.White,
 
-                )
+                    )
             }
         }
         MyTabs(pagerState = pagerState)
-        MyDifferentDays(pagerState = pagerState)
+        MyDifferentDays(pagerState = pagerState, context)
     }
 }
 
@@ -127,28 +133,33 @@ fun MyTabs(pagerState: PagerState) {
 
 @ExperimentalPagerApi
 @Composable
-fun MyDifferentDays(pagerState: PagerState) {
+fun MyDifferentDays(pagerState: PagerState, context: Context) {
     HorizontalPager(state = pagerState) { page ->
         when (page) {
-            0 -> MyDifferentDaysContent(day = "Today")
-            1 -> MyDifferentDaysContent(day = "Tomorrow")
-            2 -> MyDifferentDaysContent(day = "This Week")
+            0 -> MyDifferentDaysContent(day = "Today", context)
+            1 -> MyDifferentDaysContent(day = "Tomorrow", context)
+            2 -> MyDifferentDaysContent(day = "This Week", context)
         }
     }
 }
 
 @Composable
-fun MyDifferentDaysContent(day: String) {
+fun MyDifferentDaysContent(day: String, context: Context) {
 
     val myTextBox = remember {
         mutableStateOf(TextFieldValue())
     }
+
+    val dbHandler: DBHandler = DBHandler(context);
+    val todoList: List<UserModel> = dbHandler.readItem(day)
+
 
     Column(
         Modifier
             .fillMaxWidth()
             .padding(10.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Top
     ) {
         Row(
             Modifier
@@ -158,16 +169,20 @@ fun MyDifferentDaysContent(day: String) {
         ) {
             TextField(
                 value = myTextBox.value,
-                onValueChange = {myTextBox.value = it},
+                onValueChange = { myTextBox.value = it },
             )
 
             Spacer(Modifier.width(10.dp))
 
             Button(
-                onClick = {},
+                onClick = {
+                    dbHandler.addNewTodo(myTextBox.value.text, day)
+                    myTextBox.value = TextFieldValue()
+                },
                 colors = ButtonDefaults.buttonColors(
                     backgroundColor = greenColor,
-                    contentColor = Color.White)
+                    contentColor = Color.White
+                )
             ) {
                 Text(
                     text = "ADD",
@@ -175,13 +190,34 @@ fun MyDifferentDaysContent(day: String) {
             }
 
         }
-    }
-}
 
-@Preview(showBackground = true)
-@Composable
-fun DefaultPreview() {
-    Project2MobileAppsTheme {
+        Spacer(modifier = Modifier.height(5.dp))
 
+        LazyColumn() {
+            items(todoList.size) { index ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 40.dp, vertical = 8.dp)
+                        .border(BorderStroke(1.dp, Color.Black))
+                        .pointerInput(Unit) {
+                            detectTapGestures(
+                                onLongPress = {
+                                    dbHandler.removeItem(todoList[index].Todo)
+                                    myTextBox.value = TextFieldValue("${myTextBox.value.text} ")
+                                }
+                            )
+                        }
+
+                ) {
+                    Text(
+                        todoList[index].Todo,
+                        fontSize = 20.sp,
+                        modifier = Modifier
+                            .padding(10.dp)
+                    )
+                }
+            }
+        }
     }
 }
